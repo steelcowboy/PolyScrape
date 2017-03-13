@@ -1,3 +1,4 @@
+import re
 """
 To fix:
     'Corequisite:'
@@ -38,20 +39,34 @@ class and_list(none_list):
         self.kind = "and"
 
 def clean_string(string):
+    # Just nuke the string in this case
+    string = string.replace("Term Typically Offered: TBD", '')
+    string = string.replace("Consent of instructor", '')
     string = string.lstrip()
     string = string.replace('.', '')
     # Makes parsing a bit easier
-    string = string.replace(' and either ', '; or ')
+    string = string.replace(' and either ', '; and ')
     string = string.replace(' with a grade of C- or better', '')
     string = string.replace(' or equivalent', '')
     string = string.replace('or consent of instructor', '')
     string = string.replace('or instructor consent', '')
     string = string.rstrip()
     string = string.rstrip(',')
+    # Weird if two removed statements are in a row sometimes you get this
+    string = string.replace(' ,', '')
     if debug:
         print(string)
     return string
 
+def split_corequisite(string):
+    if 'Corequisite: ' in string:
+        outer_list = string.split('Corequisite: ')
+        coreqs = outer_list.pop(-1)
+        outer_dict = split_by_semicolon(outer_list).to_dict()
+        coreq_dict = split_by_semicolon(coreqs).to_dict()
+        return {**outer_dict, **{"coreqs": coreq_dict}}
+    else:
+        return split_by_semicolon(string)
 
 def split_by_semicolon(string):
     outer_list = None
@@ -148,10 +163,11 @@ def parse_string(string):
     print(string)
     string = clean_string(string)
 
-    outer_list = split_by_semicolon(string)    
+    outer_list = split_corequisite(string)    
     if not isinstance(outer_list, str):
-        print(outer_list.english() + "\n")
+        print(outer_list.english())
         print(outer_list.get_dict())
+        print("\n")
     else:
         print(outer_list) 
         print("\n")
