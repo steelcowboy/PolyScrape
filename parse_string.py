@@ -5,37 +5,37 @@ To fix:
     'x, y, and z' -> and_list([x, y, z])
 """
 
-
-class or_list(list):
+class none_list(list):
     def __init__(self, lst):
         list.__init__(self, lst)
+        self.kind = "none"
+
+    def expand(self, func):
+        lst = []
+        for x in self:
+            if isinstance(x, str):
+                lst.append(x)
+            else:
+                lst.append(x.func())
+        return lst
+
+    def get_dict(self):
+        lst = self.expand(self.get_dict)
+        return {self.kind: self} 
+    
+    def english(self):
+        lst = self.expand(self.english) 
+        return '(' + f' {self.kind} '.join(lst) + ')'
+
+class or_list(none_list):
+    def __init__(self, lst):
+        none_list.__init__(self, lst)
         self.kind = "or"
-    
-    def english(self):
-        lst = []
-        for x in self:
-            if isinstance(x, str):
-                lst.append(x)
-            else:
-                lst.append(x.english())
 
-        return '(' + ' or '.join(lst) + ')'
-
-class and_list(list):
+class and_list(none_list):
     def __init__(self, lst):
-        list.__init__(self, lst)
+        none_list.__init__(self, lst)
         self.kind = "and"
-    
-    def english(self):
-        lst = []
-        for x in self:
-            if isinstance(x, str):
-                lst.append(x)
-            else:
-                lst.append(x.english())
-
-        return '(' + ' and '.join(lst) + ')'
-
 
 def clean_string(string):
     string = string.lstrip()
