@@ -16,15 +16,15 @@ class none_list(list):
             if isinstance(x, str):
                 lst.append(x)
             else:
-                lst.append(x.func())
+                lst.append(getattr(x, func)())
         return lst
 
     def get_dict(self):
-        lst = self.expand(self.get_dict)
-        return {self.kind: self} 
+        lst = self.expand("get_dict")
+        return {self.kind: lst} 
     
     def english(self):
-        lst = self.expand(self.english) 
+        lst = self.expand("english") 
         return '(' + f' {self.kind} '.join(lst) + ')'
 
 class or_list(none_list):
@@ -151,6 +151,7 @@ def parse_string(string):
     outer_list = split_by_semicolon(string)    
     if not isinstance(outer_list, str):
         print(outer_list.english() + "\n")
+        print(outer_list.get_dict())
     else:
         print(outer_list) 
         print("\n")
