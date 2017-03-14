@@ -1,9 +1,10 @@
 import re
 """
 To fix:
-    'Corequisite:'
     'Recommended:'
     'x, y, and z' -> and_list([x, y, z])
+        Note: Works some of the time
+    '(or equivalent)'
 """
 
 class none_list(list):
@@ -71,8 +72,14 @@ def split_corequisite(string):
                     f"a list of length {len(outer_list)}. Dumping vars:")
             print(outer_list)
     else:
-        return split_by_semicolon(string)
+        out = split_by_semicolon(string)
+        if out:
+            if isinstance(out,str):
+                return {"single": out}
+            else:
+                return out.get_dict()
 
+    return None 
 def split_by_semicolon(string):
     outer_list = None
     for i,x in enumerate(string):
