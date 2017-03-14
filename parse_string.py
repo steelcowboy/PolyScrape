@@ -80,6 +80,29 @@ def split_corequisite(string):
                 return out.get_dict()
 
     return None 
+
+def split_recommended(string):
+    if 'Recommended: ' in string:
+        outer_list = string.split('Recommended: ')
+        coreqs = outer_list.pop(-1)
+        if len(outer_list) == 1:
+            outer_dict = split_by_semicolon(outer_list[0]).get_dict()
+            coreq_dict = split_by_semicolon(coreqs).get_dict()
+            return {**outer_dict, **{"coreqs": coreq_dict}}
+        else:
+            print("Uh oh, something's wrong. Splitting off 'Corequisite: ' resulted in " +
+                    f"a list of length {len(outer_list)}. Dumping vars:")
+            print(outer_list)
+    else:
+        out = split_by_semicolon(string)
+        if out:
+            if isinstance(out,str):
+                return {"single": out}
+            else:
+                return out.get_dict()
+
+    return None 
+
 def split_by_semicolon(string):
     outer_list = None
     for i,x in enumerate(string):
