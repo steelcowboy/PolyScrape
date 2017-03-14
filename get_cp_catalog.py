@@ -12,23 +12,27 @@ def get_courses(department):
     for courseblock in courses:
         catalog_title = ""
 
+        ### Get the basic info
         title_block = courseblock.p
 
-        for string in title_block.strings:
-            string = string.rstrip('\n').replace('\xa0', ' ')
-            if 'units' in string or 'unit' in string:
-                catalog[catalog_title]['units'] = string[0]
-            else:
-                # There is a better way to handle this but this should work  
-                course_and_title = string.split('.')
-                catalog_title = course_and_title[0]
-                
-                catalog[catalog_title] = {}
-                catalog[catalog_title]['title'] = course_and_title[1]
+        basic_info = list(title_block.strings)
+        basic_info = [string.rstrip('\n').replace('\xa0', ' ') for string in basic_info]
 
+        course_and_title = basic_info[0].split('.')
+        catalog_title = course_and_title[0]
+        
+        catalog[catalog_title] = {}
+        catalog[catalog_title]['title'] = course_and_title[1]
+
+        catalog[catalog_title]['units'] = basic_info[1] 
+
+        ### Find the prereqs block
         course_prereqs = title_block.next_sibling
-
         prereqs_html = course_prereqs.p.next_sibling
+        catalog[catalog_title]['prereqs'] = None
+
+        while prereqs_html is not None and "Prerequisite" not in prereqs_html.text: 
+            prereqs_html = prereqs_html.next_sibling
 
         if prereqs_html is not None:
             prereqs_string = [] 
@@ -39,7 +43,7 @@ def get_courses(department):
                 elif isinstance(x, bs4.element.Tag):
                     prereqs_string.append(x['title'])
             catalog[catalog_title]['prereqs'] = ''.join(
-                    [s.replace('\xa0', ' ').replace('Prerequisite: ', ' ')
+                    [s.replace('\xa0', ' ').replace('Prerequisite: ', '')
                         for s in prereqs_string])
 
         for obj in courseblock.children:
