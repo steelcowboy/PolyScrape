@@ -55,16 +55,21 @@ def clean_string(string):
     # Weird if two removed statements are in a row sometimes you get this
     string = string.replace(' ,', '')
     if debug:
-        print(string)
+        print(f"Cleaned string: {string}")
     return string
 
 def split_corequisite(string):
     if 'Corequisite: ' in string:
         outer_list = string.split('Corequisite: ')
         coreqs = outer_list.pop(-1)
-        outer_dict = split_by_semicolon(outer_list).to_dict()
-        coreq_dict = split_by_semicolon(coreqs).to_dict()
-        return {**outer_dict, **{"coreqs": coreq_dict}}
+        if len(outer_list) == 1:
+            outer_dict = split_by_semicolon(outer_list[0]).get_dict()
+            coreq_dict = split_by_semicolon(coreqs).get_dict()
+            return {**outer_dict, **{"coreqs": coreq_dict}}
+        else:
+            print("Uh oh, something's wrong. Splitting off 'Corequisite: ' resulted in " +
+                    f"a list of length {len(outer_list)}. Dumping vars:")
+            print(outer_list)
     else:
         return split_by_semicolon(string)
 
@@ -94,12 +99,12 @@ def split_by_semicolon(string):
 
     if outer_list is None:
         if debug:
-            print(string)
+            print(f"String split by semicolons: {string}")
         return split_by_comma(string) 
     # It's a list, so need to dissect further
     else:
         if debug:
-            print(outer_list)
+            print(f"Semicolon-split list: {outer_list}")
         for i,x in enumerate(outer_list):
             outer_list[i] = split_by_comma(x)
         return outer_list
@@ -126,11 +131,11 @@ def split_by_comma(string):
 
     if comma_list is None:
         if debug:
-            print(string)
+            print(f"String split by commas: {string}")
         return split_by_coordinating_conjunction(string) 
     else:
         if debug:
-            print(comma_list)
+            print(f"Comma-split list: {comma_list}")
         for i,x in enumerate(comma_list):
             comma_list[i] = split_by_coordinating_conjunction(x)
         return comma_list
@@ -139,7 +144,7 @@ def split_by_coordinating_conjunction(string):
     if "one of the following: " in string:
         string = string.replace("one of the following: ", '')
         if debug:
-            print(string)
+            print(f"'one of the following' in string: {string}")
         return split_by_coordinating_conjunction(string) 
     elif "and" in string:
         if ',' in string:
@@ -165,8 +170,8 @@ def parse_string(string):
 
     outer_list = split_corequisite(string)    
     if not isinstance(outer_list, str):
-        print(outer_list.english())
-        print(outer_list.get_dict())
+        # print(outer_list.english())
+        print(outer_list)
         print("\n")
     else:
         print(outer_list) 
