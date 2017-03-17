@@ -41,7 +41,6 @@ class and_list(none_list):
 
 def clean_string(string):
     # Just nuke the string in this case
-    string = string.replace("Term Typically Offered: TBD", '')
     string = string.replace("Consent of instructor", '')
     string = string.lstrip()
     string = string.replace('.', '')
@@ -64,18 +63,20 @@ def split_corequisite(string):
         outer_list = string.split('Corequisite: ')
         coreqs = outer_list.pop(-1)
         if len(outer_list) == 1:
-            outer_dict = split_by_semicolon(outer_list[0]).get_dict()
-            coreq_dict = split_by_semicolon(coreqs).get_dict()
+            outer_dict = split_recommended(outer_list[0]).get_dict()
+            coreq_dict = split_recommended(coreqs).get_dict()
             return {**outer_dict, **{"coreqs": coreq_dict}}
         else:
             print("Uh oh, something's wrong. Splitting off 'Corequisite: ' resulted in " +
                     f"a list of length {len(outer_list)}. Dumping vars:")
             print(outer_list)
     else:
-        out = split_by_semicolon(string)
+        out = split_recommended(string)
         if out:
             if isinstance(out,str):
                 return {"single": out}
+            elif isinstance(out,dict):
+                return out
             else:
                 return out.get_dict()
 
@@ -84,13 +85,13 @@ def split_corequisite(string):
 def split_recommended(string):
     if 'Recommended: ' in string:
         outer_list = string.split('Recommended: ')
-        coreqs = outer_list.pop(-1)
+        recom = outer_list.pop(-1)
         if len(outer_list) == 1:
             outer_dict = split_by_semicolon(outer_list[0]).get_dict()
-            coreq_dict = split_by_semicolon(coreqs).get_dict()
-            return {**outer_dict, **{"coreqs": coreq_dict}}
+            recom_dict = split_by_semicolon(recom).get_dict()
+            return {**outer_dict, **{"recommended": coreq_dict}}
         else:
-            print("Uh oh, something's wrong. Splitting off 'Corequisite: ' resulted in " +
+            print("Uh oh, something's wrong. Splitting off 'Recommended: ' resulted in " +
                     f"a list of length {len(outer_list)}. Dumping vars:")
             print(outer_list)
     else:
@@ -99,7 +100,7 @@ def split_recommended(string):
             if isinstance(out,str):
                 return {"single": out}
             else:
-                return out.get_dict()
+                return out
 
     return None 
 
@@ -171,12 +172,17 @@ def split_by_comma(string):
         return comma_list
 
 def split_by_coordinating_conjunction(string):
-    if "one of the following: " in string:
-        string = string.replace("one of the following: ", '')
-        if debug:
-            print(f"'one of the following' in string: {string}")
-        return split_by_coordinating_conjunction(string) 
-    elif "and" in string:
+    # Handle multiple cases
+    one_of = ["one of the following: ", "one of the following courses: "]
+    for x in one_of:
+        # Still trying to figure out how to handle this
+        if x in string:
+            string = string.split(x) 
+            if debug:
+                print(f"'one of the following' in string: {string}")
+            return split_by_coordinating_conjunction(string) 
+
+    if "and" in string:
         if ',' in string:
             string = string.replace(" and", ',')
             split_list = string.split(', ')
@@ -196,6 +202,8 @@ def split_by_coordinating_conjunction(string):
 
 def parse_string(string):
     print(string)
+    if string is None:
+        return
     string = clean_string(string)
 
     outer_list = split_corequisite(string)    
