@@ -1,7 +1,6 @@
 import re
 """
 To fix:
-    'Recommended:'
     'x, y, and z' -> and_list([x, y, z])
         Note: Works some of the time
     '(or equivalent)'
@@ -39,6 +38,17 @@ class and_list(none_list):
         none_list.__init__(self, lst)
         self.kind = "and"
 
+class single(list):
+    def __init__(self, obj):
+        list.__init__(self, [obj])
+        self.kind = single
+
+    def get_dict(self):
+        return {'single': self[0]}
+
+    def english(self):
+        return f"{self[0]}"
+
 def clean_string(string):
     # Just nuke the string in this case
     string = string.replace("Consent of instructor", '')
@@ -63,9 +73,13 @@ def split_corequisite(string):
         outer_list = string.split('Corequisite: ')
         coreqs = outer_list.pop(-1)
         if len(outer_list) == 1:
-            outer_dict = split_recommended(outer_list[0]).get_dict()
-            coreq_dict = split_recommended(coreqs).get_dict()
-            return {**outer_dict, **{"coreqs": coreq_dict}}
+            outer_dict = split_recommended(outer_list[0])
+            if debug:
+                print(f"Coreq outer dict: {outer_dict}")
+            coreq_dict = split_recommended(coreqs)
+            if debug:
+                print(f"Found coreqs: {coreq_dict}")
+            return {**outer_dict.get_dict(), **{"coreqs": coreq_dict}}
         else:
             print("Uh oh, something's wrong. Splitting off 'Corequisite: ' resulted in " +
                     f"a list of length {len(outer_list)}. Dumping vars:")
@@ -74,7 +88,7 @@ def split_corequisite(string):
         out = split_recommended(string)
         if out:
             if isinstance(out,str):
-                return {"single": out}
+                return single(out)
             elif isinstance(out,dict):
                 return out
             else:
@@ -87,9 +101,13 @@ def split_recommended(string):
         outer_list = string.split('Recommended: ')
         recom = outer_list.pop(-1)
         if len(outer_list) == 1:
-            outer_dict = split_by_semicolon(outer_list[0]).get_dict()
-            recom_dict = split_by_semicolon(recom).get_dict()
-            return {**outer_dict, **{"recommended": coreq_dict}}
+            outer_dict = split_by_semicolon(outer_list[0])
+            if debug:
+                print(f"Recom outer dict: {outer_dict}")
+            recom_dict = split_by_semicolon(recom)#.get_dict()
+            if debug:
+                print(f"Found recommended: {recom_dict}")
+            return {**outer_dict.get_dict(), **{"recommended": recom_dict}}
         else:
             print("Uh oh, something's wrong. Splitting off 'Recommended: ' resulted in " +
                     f"a list of length {len(outer_list)}. Dumping vars:")
@@ -98,7 +116,7 @@ def split_recommended(string):
         out = split_by_semicolon(string)
         if out:
             if isinstance(out,str):
-                return {"single": out}
+                return single(out)
             else:
                 return out
 
@@ -173,14 +191,17 @@ def split_by_comma(string):
 
 def split_by_coordinating_conjunction(string):
     # Handle multiple cases
-    one_of = ["one of the following: ", "one of the following courses: "]
+    one_of = ["one of the following: ", "and one of the following: ", "and one of the following courses: "]
     for x in one_of:
         # Still trying to figure out how to handle this
         if x in string:
             string = string.split(x) 
             if debug:
                 print(f"'one of the following' in string: {string}")
-            return split_by_coordinating_conjunction(string) 
+                print(string)
+            # This is very hacky and will not survive long
+            good_stuff = string[1].replace(' or', ',').split(', ')
+            return or_list(good_stuff)
 
     if "and" in string:
         if ',' in string:
