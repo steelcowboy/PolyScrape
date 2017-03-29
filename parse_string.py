@@ -62,6 +62,7 @@ def clean_string(string):
     string = string.replace('or instructor consent', '')
     string = string.rstrip()
     string = string.rstrip(',')
+    string = string.rstrip(';')
     # Weird if two removed statements are in a row sometimes you get this
     string = string.replace(' ,', '')
     if debug:
@@ -74,12 +75,17 @@ def split_corequisite(string):
         coreqs = outer_list.pop(-1)
         if len(outer_list) == 1:
             outer_dict = split_recommended(outer_list[0])
-            if debug:
-                print(f"Coreq outer dict: {outer_dict}")
             coreq_dict = split_recommended(coreqs)
             if debug:
+                print(f"Coreq outer dict: {outer_dict}")
                 print(f"Found coreqs: {coreq_dict}")
-            return {**outer_dict.get_dict(), **{"coreqs": coreq_dict}}
+
+            if isinstance(outer_dict, str):
+                outer_dict = single(outer_dict).get_dict() 
+            else:
+                outer_dict = outer_dict.get_dict()
+
+            return {**outer_dict, **{"coreqs": coreq_dict}}
         else:
             print("Uh oh, something's wrong. Splitting off 'Corequisite: ' resulted in " +
                     f"a list of length {len(outer_list)}. Dumping vars:")
@@ -102,12 +108,23 @@ def split_recommended(string):
         recom = outer_list.pop(-1)
         if len(outer_list) == 1:
             outer_dict = split_by_semicolon(outer_list[0])
+            recom_dict = split_by_semicolon(recom)
             if debug:
                 print(f"Recom outer dict: {outer_dict}")
-            recom_dict = split_by_semicolon(recom)#.get_dict()
-            if debug:
                 print(f"Found recommended: {recom_dict}")
-            return {**outer_dict.get_dict(), **{"recommended": recom_dict}}
+
+            if isinstance(outer_dict, str):
+                outer_dict = single(outer_dict).get_dict() 
+            else:
+                outer_dict = outer_dict.get_dict()
+
+            if isinstance(recom_dict, str):
+                recom_dict = single(recom_dict).get_dict() 
+            else:
+                recom_dict = recom_dict.get_dict()
+
+
+            return {**outer_dict, **{"recommended": recom_dict}}
         else:
             print("Uh oh, something's wrong. Splitting off 'Recommended: ' resulted in " +
                     f"a list of length {len(outer_list)}. Dumping vars:")
