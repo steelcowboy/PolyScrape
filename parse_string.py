@@ -163,6 +163,10 @@ def split_by_semicolon(string):
                 # Replace the search section since we don't need it anymore 
                 outer_list[-1] = outer_list[-1].replace(remove_section, "", 1)
 
+    # Might use this to handle more complex string 
+    # if ";" in outer_list[-1]:
+        # outer_list[-1] = split_by_semicolon(outer_list[-1])
+
     if outer_list is None:
         if debug:
             print(f"String split by semicolons: {string}")
@@ -248,13 +252,15 @@ def split_by_coordinating_conjunction(string):
         if c in string:
             if debug:
                 conjunction = c.lstrip().rstrip()
-                print(f"Found '{conjunction}' in string {string}")
+                print(f"Found '{conjunction}' in string: {string}")
 
             if ',' in string:
                 string = string.replace(c, ',')
                 split_list = string.split(', ')
             else:
                 split_list = string.split(c)
+
+            split_list = list(filter(None, split_list))
             
             # Some weird strings have no commas or anything special
             for i,x in enumerate(split_list):
