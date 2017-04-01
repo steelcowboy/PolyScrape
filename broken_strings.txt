@@ -1,0 +1,5 @@
+CSC 141 or CSC 348; and CPE/CSC 357; or graduate standing and consent of instructor.
+    {'or': [{'or': ['CSC 141', 'CSC 348']}, {'and': ['', 'CPE/CSC 357']}, {'and': ['graduate standing', 'consent of instructor']}]}
+
+CSC 597, selection of thesis committee, graduate standing, and consent of instructor.
+

@@ -1,4 +1,4 @@
-import re
+import re, sys
 """
 To fix:
     'x, y, and z' -> and_list([x, y, z])
@@ -198,60 +198,82 @@ def split_by_comma(string):
     if comma_list is None:
         if debug:
             print(f"String split by commas: {string}")
-        return split_by_coordinating_conjunction(string) 
+        return split_by_one_of(string) 
     else:
         if debug:
             print(f"Comma-split list: {comma_list}")
         for i,x in enumerate(comma_list):
-            comma_list[i] = split_by_coordinating_conjunction(x)
+            comma_list[i] = split_by_one_of(x)
         return comma_list
 
-def split_by_coordinating_conjunction(string):
+def split_by_one_of(string):
     # Handle multiple cases
-    one_of = ["one of the following: ", "and one of the following: ", "and one of the following courses: "]
+    one_of = ["and one of the following: ", "and one of the following courses: "]
     for x in one_of:
         # Still trying to figure out how to handle this
         if x in string:
             string = string.split(x) 
             if debug:
-                print(f"'one of the following' in string: {string}")
+                print(f"'and one of the following' in string: {string}")
                 print(string)
-            # This is very hacky and will not survive long
-            good_stuff = string[1].replace(' or', ',').split(', ')
-            return or_list(good_stuff)
 
-    if "and" in string:
-        if ',' in string:
-            string = string.replace(" and", ',')
-            split_list = string.split(', ')
-        else:
-            split_list = string.split(" and ")
+            # In case it's a weird type of string
+            string[0] = split_by_coordinating_conjunction(string[0])
 
-        return and_list(split_list)
-    elif "or" in string:
-        if ',' in string:
-            string = string.replace(" or", ',')
-            split_list = string.split(', ')
-        else:
-            split_list = string.split(" or ")
-        return or_list(split_list)
+            # This will not work if there is "and one of the following" multiple times  
+            or_stuff = string[1].replace(' or', ',').split(', ')
+            return and_list([string[0], or_list(or_stuff)])
+
+    one_of = ["or one of the following: ", "or one of the following courses: "]
+    for x in one_of:
+        # Still trying to figure out how to handle this
+        if x in string:
+            string = string.split(x) 
+            if debug:
+                print(f"'or one of the following' in string: {string}")
+                print(string)
+
+            # In case it's a weird type of string
+            string[0] = split_by_coordinating_conjunction(string[0])
+
+            # This will not work if there is "and one of the following" multiple times  
+            or_stuff = string[1].replace(' or', ',').split(', ')
+            return and_list([string[0], or_list(or_stuff)])
+
+    return split_by_coordinating_conjunction(string)
+
+def split_by_coordinating_conjunction(string):
+    conjs = [" or ", " and "]
+    for c in conjs:
+        if c in string:
+            if debug:
+                conjunction = c.lstrip().rstrip()
+                print(f"Found '{conjunction}' in string {string}")
+
+            if ',' in string:
+                string = string.replace(c, ',')
+                split_list = string.split(', ')
+            else:
+                split_list = string.split(c)
+            
+            # Some weird strings have no commas or anything special
+            for i,x in enumerate(split_list):
+                # This will do nothing if fully decomposed
+                split_list[i] = split_by_coordinating_conjunction(x)
+
+            if c == " and ":
+                return and_list(split_list)
+            else:
+                return or_list(split_list)
     
     return string
 
 def parse_string(string):
-    print(string)
     if string is None:
         return
     string = clean_string(string)
-
-    outer_list = split_corequisite(string)    
-    if not isinstance(outer_list, str):
-        # print(outer_list.english())
-        print(outer_list)
-        print("\n")
-    else:
-        print(outer_list) 
-        print("\n")
+    outer_list = split_corequisite(string)
+    return outer_list 
 
 
 debug=False
@@ -259,19 +281,8 @@ if __name__=="__main__":
     import sys
 
     if len(sys.argv) == 1:
-        strings = [
-        "Completion of ELM requirement, and passing score on MAPE or MATH 117 with a grade of C- or better or MATH 118 with a grade of C- or better, or consent of instructor.",
-
-        "MATH 118 or equivalent.",
-
-        "MATH 141 or MATH 161 with a grade of C- or better, or consent of instructor.",
-
-        "CSC/CPE 103 with a grade of C- or better, or instructor consent.",
-
-        "CPE/CSC 357; and CSC 141 or CSC 348.",
-
-        "CSC 141 or CSC 348, and MATH 142; or CPE/CSC 103 and MATH 248."
-        ]
+        print("USAGE: parse_string.py STRING")
+        sys.exit(1)
     else:
         args = sys.argv 
         if '-d' in args or '--debug' in args:
@@ -280,4 +291,6 @@ if __name__=="__main__":
         strings = args[1:]
 
     for x in strings:
-        parse_string(x)
+        print(x)
+        parse_result = parse_string(x)
+        print(f"{parse_result}\n")
