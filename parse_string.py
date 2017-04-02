@@ -146,7 +146,7 @@ def split_by_semicolon(string):
             search_section = string[i+1:i+5]
             remove_section = None
 
-            split_list = string.split(";")
+            split_list = string.split(";", 1)
 
             if "and" in search_section:
                 outer_list = and_list(split_list)
@@ -155,17 +155,23 @@ def split_by_semicolon(string):
                 outer_list = or_list(split_list)
                 remove_section = " or "
             else:
-                # Semicolon seems to imply and if not stated
-                split_list[-1] = split_list[-1][1:]
+                # Semicolon seems to imply 'and' not stated
+                if split_list[-1] == ' ':
+                    split_list[-1] = split_list[-1][1:]
                 outer_list = and_list(split_list)
-
+            
             if remove_section is not None:
                 # Replace the search section since we don't need it anymore 
                 outer_list[-1] = outer_list[-1].replace(remove_section, "", 1)
+            
+            # Need to break since we're only looking for first semicolon
+            break
 
     # Might use this to handle more complex string 
-    # if ";" in outer_list[-1]:
-        # outer_list[-1] = split_by_semicolon(outer_list[-1])
+    if ";" in outer_list[-1]:
+        if debug:
+            print(f"Decomposing \"{outer_list[-1]}\" further")
+        outer_list[-1] = split_by_semicolon(outer_list[-1])
 
     if outer_list is None:
         if debug:
