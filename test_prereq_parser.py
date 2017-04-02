@@ -15,4 +15,5 @@ if __name__=="__main__":
     for key,val in inp.items():
         for k,v in val.items():
             if k == "prereqs":
-                parse_string(v)
+                outp = parse_string(v)
+                print(f"{v}\n\t{outp}\n")

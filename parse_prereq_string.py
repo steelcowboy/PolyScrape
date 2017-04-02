@@ -72,6 +72,8 @@ def clean_string(string):
 def split_corequisite(string):
     if 'Corequisite: ' in string:
         outer_list = string.split('Corequisite: ')
+        outer_list = [x.lstrip().rstrip() for x in outer_list]
+
         coreqs = outer_list.pop(-1)
         if len(outer_list) == 1:
             outer_dict = split_recommended(outer_list[0])
@@ -105,6 +107,8 @@ def split_corequisite(string):
 def split_recommended(string):
     if 'Recommended: ' in string:
         outer_list = string.split('Recommended: ')
+        outer_list = [x.lstrip().rstrip() for x in outer_list]
+
         recom = outer_list.pop(-1)
         if len(outer_list) == 1:
             outer_dict = split_by_semicolon(outer_list[0])
@@ -147,6 +151,8 @@ def split_by_semicolon(string):
             remove_section = None
 
             split_list = string.split(";", 1)
+            split_list = [x.lstrip().rstrip() for x in split_list]
+
 
             if "and" in search_section:
                 outer_list = and_list(split_list)
@@ -167,18 +173,18 @@ def split_by_semicolon(string):
             # Need to break since we're only looking for first semicolon
             break
 
-    # Might use this to handle more complex string 
-    if ";" in outer_list[-1]:
-        if debug:
-            print(f"Decomposing \"{outer_list[-1]}\" further")
-        outer_list[-1] = split_by_semicolon(outer_list[-1])
-
     if outer_list is None:
         if debug:
             print(f"String split by semicolons: {string}")
         return split_by_comma(string) 
     # It's a list, so need to dissect further
     else:
+        # Might use this to handle more complex string 
+        if ";" in outer_list[-1]:
+            if debug:
+                print(f"Decomposing \"{outer_list[-1]}\" further")
+            outer_list[-1] = split_by_semicolon(outer_list[-1])
+
         if debug:
             print(f"Semicolon-split list: {outer_list}")
         for i,x in enumerate(outer_list):
@@ -193,6 +199,7 @@ def split_by_comma(string):
             remove_section = None
 
             split_list = string.split(",")
+            split_list = [x.lstrip().rstrip() for x in split_list]
 
             if "and" in search_section:
                 comma_list = and_list(split_list)
@@ -223,25 +230,30 @@ def split_by_one_of(string):
         # Still trying to figure out how to handle this
         if x in string:
             string = string.split(x) 
+            string = list(filter(None, string))
+
             if debug:
                 print(f"'and one of the following' in string: {string}")
-                print(string)
 
-            # In case it's a weird type of string
-            string[0] = split_by_coordinating_conjunction(string[0])
+            if len(string) == 2:
+                # In case it's a weird type of string
+                string[0] = split_by_coordinating_conjunction(string[0])
 
-            # This will not work if there is "and one of the following" multiple times  
-            or_stuff = string[1].replace(' or', ',').split(', ')
-            return and_list([string[0], or_list(or_stuff)])
+                # This will not work if there is "and one of the following" multiple times  
+                or_stuff = string[1].replace(' or', ',').split(', ')
+                return and_list([string[0], or_list(or_stuff)])
+            else:
+                return or_list(string[0].replace(' or', ',').split(', '))
 
     one_of = ["or one of the following: ", "or one of the following courses: "]
     for x in one_of:
         # Still trying to figure out how to handle this
         if x in string:
             string = string.split(x) 
+            string = list(filter(None, string))
+
             if debug:
                 print(f"'or one of the following' in string: {string}")
-                print(string)
 
             # In case it's a weird type of string
             string[0] = split_by_coordinating_conjunction(string[0])
@@ -278,6 +290,11 @@ def split_by_coordinating_conjunction(string):
             else:
                 return or_list(split_list)
     
+    if string[:4] == "and ":
+        string = string[4:]
+    elif string[:3] == "or ":
+        string = string[3:]
+
     return string
 
 def parse_string(string):
