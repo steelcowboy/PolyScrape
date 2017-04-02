@@ -1,5 +1,6 @@
 import requests, bs4, json, sys  
 from bs4 import BeautifulSoup 
+from parse_prereq_string import parse_string 
 
 def get_courses(department):
     catalog = {}
@@ -35,16 +36,21 @@ def get_courses(department):
             prereqs_html = prereqs_html.next_sibling
 
         if prereqs_html is not None:
-            prereqs_string = [] 
+            prereqs_list = [] 
 
             for x in prereqs_html.children:
                 if isinstance(x, bs4.element.NavigableString):
-                    prereqs_string.append(x)
+                    prereqs_list.append(x)
                 elif isinstance(x, bs4.element.Tag):
-                    prereqs_string.append(x['title'])
-            catalog[catalog_title]['prereqs'] = ''.join(
+                    prereqs_list.append(x['title'])
+
+            prereqs_string = ''.join(
                     [s.replace('\xa0', ' ').replace('Prerequisite: ', '')
-                        for s in prereqs_string])
+                        for s in prereqs_list])
+
+            catalog[catalog_title]['prereqs'] = prereqs_string  
+
+            catalog[catalog_title]['parsed_prereqs'] = parse_string(prereqs_string)
 
         for obj in courseblock.children:
             if isinstance(obj, bs4.element.Tag) and "courseblockdesc" in obj['class']: 

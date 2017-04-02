@@ -1,6 +1,9 @@
 # Don't need JSON
 *.json
 
+# A folder just for downloaded charts
+majors 
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
