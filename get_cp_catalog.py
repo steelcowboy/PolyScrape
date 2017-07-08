@@ -25,7 +25,10 @@ def get_courses(department):
         catalog[catalog_title] = {}
         catalog[catalog_title]['title'] = course_and_title[1]
 
-        catalog[catalog_title]['units'] = basic_info[1] 
+        try:
+            catalog[catalog_title]['units'] = int(basic_info[1][0])
+        except:
+            catalog[catalog_title]['units'] = basic_info[1]
 
         ### Find the prereqs block
         course_prereqs = title_block.next_sibling
