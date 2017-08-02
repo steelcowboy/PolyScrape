@@ -63,7 +63,7 @@ def get_courses(department):
                         desc_string.append(x)
                     elif isinstance(x, bs4.element.Tag):
                         desc_string.append(x['title'])
-                catalog[catalog_title]['decription'] = ''.join(
+                catalog[catalog_title]['description'] = ''.join(
                         [s.replace('\xa0', ' ').replace('Prerequisite: ', ' ')
                             for s in desc_string])
 
